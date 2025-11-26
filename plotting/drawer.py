@@ -178,3 +178,26 @@ def draw_precedence_relations(JobShop: JobShop):
 
     plt.axis("off")
     plt.show()
+
+
+def draw_performance_3d(jobshops):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    colormap = create_colormap()
+    xs, ys, zs, cs = [], [], [], []
+    for i, js in enumerate(jobshops):
+        try:
+            xs.append(js.makespan)
+            ys.append(js.U_ave_1)
+            zs.append(js.Lateness_ave)
+            cs.append(colormap(i % colormap.N))
+        except Exception:
+            continue
+    ax.scatter(xs, ys, zs, c=cs, edgecolors='black')
+    ax.set_xlabel('Makespan')
+    ax.set_ylabel('U_ave_1')
+    ax.set_zlabel('Lateness_ave')
+    ax.set_title('JobShop Performance (3D)')
+    fig.set_size_inches(16, 8)
+    plt.show()
+

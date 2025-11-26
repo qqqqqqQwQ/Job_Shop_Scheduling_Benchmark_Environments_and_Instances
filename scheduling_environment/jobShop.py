@@ -50,6 +50,7 @@ class JobShop:
         for m in range(M_num):
             self.add_machine(Machine(m))
         temp=0
+        precedence = {}
         for j in range(J_num):
             job_obj = Job(j)
             job_obj.set_arrival_time(int(Arrival_list[j]))
@@ -62,11 +63,16 @@ class JobShop:
                     if dur != -1 and dur != -1.0:
                         op.add_operation_option(m,dur)
                 if o > 0:
-                    op.predecessors.append(job_obj.get_operation(temp - 1))
+                    prev_op = job_obj.get_operation(temp - 1)
+                    op.predecessors.append(prev_op)
+                    precedence[op.operation_id] = [prev_op]
+                else:
+                    precedence[op.operation_id] = []
                 job_obj.add_operation(op)
                 self.add_operation(op)
                 temp=temp+1
 
+        self.add_precedence_relations_operations(precedence)
         first_ops = [jb.operations[0] for jb in self.jobs if len(jb.operations) > 0] # 所有作业的第一个工序
         self.set_operations_available_for_scheduling(first_ops) # 设置可调度工序
 

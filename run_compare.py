@@ -4,6 +4,8 @@ from run_FJSP_DRL import main as fjsp_drl_main
 from run_DANIEL import main as daniel_main
 from run_genetic_algorithm import main as ga_main
 from run_dispatching_rules import main as dispatch_main
+from run_DMOFJSSP_DRL import main as DMOFJSSP_main
+from plotting import drawer
 
 def get_results(methods, config_files=None): # make sure the instance in each toml file is the same
     results = {}
@@ -44,6 +46,12 @@ def get_results(methods, config_files=None): # make sure the instance in each to
             results['dispatch'] = env
         except Exception as e:
             results['dispatch'] = f"error: {e}"
+    if 'DMOFJSSP' in methods:
+        try:
+            envs,_,_ = DMOFJSSP_main(run_times=1, e_ave_Test = 20,New_insert = 20,machine = 8, DDT_Test = 1.2, seed=30)
+            results['DMOFJSSP'] = envs[0]
+        except Exception as e:
+            results['DMOFJSSP'] = f"error: {e}"
     return results
 
 def main(methods, config_files=None):
@@ -51,11 +59,15 @@ def main(methods, config_files=None):
     for method, env in results.items():
         try:
             print(f"{method}_makespan: {env.makespan}")
-            print(f"{method}_U_ave: {env.U_ave}")
+            print(f"{method}_U_ave: {env.U_ave_1}")
+            print(f"{method}_U_max: {env.Lateness_ave}")
+            drawer.draw_precedence_relations(env)
+            drawer.draw_gantt_chart(env)
         except Exception:
             print(f"{method}_env: {env}")
 
 if __name__ == "__main__":
     # methods = ['milp', 'cp_sat', 'fjsp_drl', 'daniel', 'ga', 'dispatch']
-    methods = ['cp_sat', 'fjsp_drl', 'daniel', 'dispatch']
+    # methods = ['cp_sat', 'fjsp_drl', 'daniel', 'dispatch']
+    methods = ['DMOFJSSP']
     main(methods)
