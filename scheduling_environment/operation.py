@@ -85,8 +85,8 @@ class Operation:
         """Return the finishing time of the latest predecessor."""
         if not self.predecessors:
             return self.job.arrival_time
-        end_times_predecessors = [operation.scheduled_end_time for operation in self.predecessors]
-        return max(end_times_predecessors)
+        end_times_predecessors = [op.scheduled_end_time for op in self.predecessors if op is not None and op.scheduled_end_time is not None]
+        return max(end_times_predecessors) if end_times_predecessors else self.job.arrival_time
 
     def update_job_id(self, new_job_id: int) -> None:
         """Update the id of a job (used for assembly scheduling problems, with no pre-given job id)."""

@@ -31,6 +31,44 @@ class JobShop:
 
         for operation in self._operations:
             operation.reset()
+    def set(self, Processing_time, Arrival_list, Deliver_list, M_num, O_list, O_num, J_num):
+        self._jobs = []
+        self._operations = []
+        self._machines = []
+        self._precedence_relations_jobs = {}
+        self._precedence_relations_operations = {}
+        self._sequence_dependent_setup_times = []
+        self.add_sequence_dependent_setup_times(
+            [[[0 for _ in range(O_num)] for _ in range(O_num)] for _ in range(M_num)]
+        ) # 不考虑换刀时间
+        self._operations_to_be_scheduled = [] # 已调度集合
+        self._operations_available_for_scheduling = []
+        self._scheduled_operations = []
+
+        self.set_nr_of_jobs(J_num)
+        self.set_nr_of_machines(M_num)
+        for m in range(M_num):
+            self.add_machine(Machine(m))
+        temp=0
+        for j in range(J_num):
+            job_obj = Job(j)
+            job_obj.set_arrival_time(int(Arrival_list[j]))
+            job_obj.set_due_date(int(Deliver_list[j]))
+            self.add_job(job_obj)
+            for o in range(O_list[j]):
+                op = Operation(job_obj, j, temp)
+                for m in range(M_num):
+                    dur = Processing_time[j][o][m]
+                    if dur != -1 and dur != -1.0:
+                        op.add_operation_option(m,dur)
+                if o > 0:
+                    op.predecessors.append(job_obj.get_operation(temp - 1))
+                job_obj.add_operation(op)
+                self.add_operation(op)
+                temp=temp+1
+
+        first_ops = [jb.operations[0] for jb in self.jobs if len(jb.operations) > 0] # 所有作业的第一个工序
+        self.set_operations_available_for_scheduling(first_ops) # 设置可调度工序
 
     def __str__(self):
         return f"Instance {self._name}, {self.nr_of_jobs} jobs, {len(self.operations)} operations, {len(self.machines)} machines"
@@ -117,6 +155,11 @@ class JobShop:
         return self._nr_of_machines
 
     @property
+    def sequence_dependent_setup_times(self) -> List:
+        """Return the sequence dependent setup times."""
+        return self._sequence_dependent_setup_times
+
+    @property
     def operations_to_be_scheduled(self) -> List[Operation]:
         """Return all the operations to be schedule"""
         return self._operations_to_be_scheduled
@@ -167,6 +210,13 @@ class JobShop:
     def U_ave(self) -> float:
         """Return the average machine load (mean of U across all machines)."""
         return (sum(machine.U for machine in self.machines) / len(self.machines)) if len(self.machines) > 0 else 0
+
+    @property
+    def U_ave_1(self) -> float:
+        """Return the average machine load (mean of U across all machines)."""
+        if(self.U_ave == 0):
+            return -1
+        return 1/self.U_ave
 
     @property
     def Lateness_ave(self) -> float:
